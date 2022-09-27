@@ -1,20 +1,39 @@
-<ion-header [translucent]="true">
-  <ion-toolbar>
-    <ion-title>
-      Blank
-    </ion-title>
-  </ion-toolbar>
-</ion-header>
-
 <ion-content [fullscreen]="true">
-  <ion-header collapse="condense">
-    <ion-toolbar>
-      <ion-title size="large">Blank</ion-title>
-    </ion-toolbar>
-  </ion-header>
-
   <div id="container">
-    <strong>Ready to create an app?</strong>
-    <p>Start with Ionic <a target="_blank" rel="noopener noreferrer" href="https://ionicframework.com/docs/components">UI Components</a></p>
+    <h1>Home</h1>
+
+    <p>You have successfully logged in.</p>
+    <br />
+
+    <p>This view is only accessible by authenticated users.</p>
+    <br />
+
+    <p>User ID: XXX</p>
+    <br />
+
+    <hr />
+
+    <p>Email Connected: No</p>
+
+    <div class="btn-div">
+      <ion-button>Connect Email</ion-button>
+    </div>
+
+    <hr />
+
+    <p>Wallets Connected: 0</p>
+
+    <div class="btn-div">
+      <ion-button>Connect Metamask Wallet</ion-button>
+    </div>
+    <div class="btn-div">
+      <ion-button>Connect WalletConnect Wallet</ion-button>
+    </div>
+
+    <hr />
+
+    <div class="btn-div">
+      <ion-button (click)="logOut()">Log Out</ion-button>
+    </div>
   </div>
 </ion-content>
