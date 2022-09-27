@@ -1,0 +1,7 @@
+{
+  "name": "tap-auth-demo",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}
