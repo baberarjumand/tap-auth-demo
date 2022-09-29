@@ -7,16 +7,20 @@ import { BehaviorSubject } from 'rxjs';
 })
 export class AuthService {
   isAuthenticated$ = new BehaviorSubject(false);
+  isProfileComplete$ = new BehaviorSubject(false);
 
   constructor(private router: Router) {}
 
+  // if profile is complete, then go to home page
+  // if profile is incomplete, then go to setup-profile page
   login() {
     this.isAuthenticated$.next(true);
-    this.router.navigate(['']);
+    this.router.navigate(['setup-profile']);
   }
 
   logOut() {
     this.isAuthenticated$.next(false);
+    this.isProfileComplete$.next(false);
     this.router.navigate(['login']);
   }
 
@@ -43,5 +47,10 @@ export class AuthService {
     // } else {
     //   return true;
     // }
+  }
+
+  submitUserHandleForm() {
+    this.isProfileComplete$.next(true);
+    this.router.navigate(['']);
   }
 }
