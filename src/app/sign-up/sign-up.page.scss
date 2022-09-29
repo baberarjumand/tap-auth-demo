@@ -1,0 +1,13 @@
+.input-msg {
+  text-align: left;
+  margin-top: 5px;
+  font-size: 0.7em;
+}
+
+.err-msg {
+  color: var(--ion-color-danger);
+}
+
+.valid-msg {
+  color: var(--ion-color-success);
+}

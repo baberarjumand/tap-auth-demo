@@ -1,0 +1,63 @@
+<ion-content [fullscreen]="true">
+  <div id="container">
+    <h1>Sign Up</h1>
+
+    <p>Please click below to create a new account.</p>
+
+    <div class="btn-div">
+      <ion-grid>
+        <ion-row>
+          <ion-col size="10" offset="1" size-md="6" offset-md="3">
+            <ion-item>
+              <ion-label position="stacked">Choose Your Handle</ion-label>
+              <!-- <ion-input [(ngModel)]="userHandle" (ionChange)="userHandleInputChanged()"></ion-input> -->
+              <ion-input [formControl]="userHandleInput"></ion-input>
+            </ion-item>
+            <div
+              class="input-msg err-msg"
+              *ngIf="userHandleInput.errors?.['required'] && (userHandleInput.dirty || userHandleInput.touched)"
+            >
+              Please enter a Handle.
+            </div>
+            <div
+              class="input-msg err-msg"
+              *ngIf="userHandleInput.errors?.['minlength']"
+            >
+              Handle must be at least 5 characters long.
+            </div>
+            <div
+              class="input-msg err-msg"
+              *ngIf="userHandleInput.errors?.['uniqueHandleError']"
+            >
+              Handle is already taken.
+            </div>
+            <div class="input-msg" *ngIf="userHandleInput.pending">
+              Checking Handle Availibility
+            </div>
+            <div class="input-msg valid-msg" *ngIf="userHandleInput.valid">
+              Handle is Available.
+            </div>
+          </ion-col>
+        </ion-row>
+      </ion-grid>
+    </div>
+
+    <div class="btn-div">
+      <ion-button (click)="signUp()">Sign Up with Magic Link</ion-button>
+    </div>
+
+    <div class="btn-div">
+      <ion-button (click)="signUp()">Sign Up with Metamask</ion-button>
+    </div>
+
+    <div class="btn-div">
+      <ion-button (click)="signUp()">Sign Up with WalletConnect</ion-button>
+    </div>
+
+    <hr />
+
+    <div class="btn-div">
+      <ion-button [routerLink]="['/login']">Log In Instead</ion-button>
+    </div>
+  </div>
+</ion-content>
