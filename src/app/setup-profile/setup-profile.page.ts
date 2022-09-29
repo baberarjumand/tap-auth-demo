@@ -25,12 +25,12 @@ export class SetupProfilePage implements OnInit, OnDestroy {
   ) {}
 
   ngOnInit() {
-    this.userHandleInputSub = this.userHandleInput.valueChanges
-      .pipe(debounceTime(2000), distinctUntilChanged())
-      .subscribe((val) => {
-        // console.log(val);
-        // console.log('Errors:', this.userHandleInput.errors);
-      });
+    // this.userHandleInputSub = this.userHandleInput.valueChanges
+    //   .pipe(debounceTime(2000), distinctUntilChanged())
+    //   .subscribe((val) => {
+    //     // console.log(val);
+    //     // console.log('Errors:', this.userHandleInput.errors);
+    //   });
   }
 
   ngOnDestroy(): void {
@@ -41,13 +41,15 @@ export class SetupProfilePage implements OnInit, OnDestroy {
 
   submitUserHandleForm() {
     if (this.userHandleInput.valid) {
-      this.authService.submitUserHandleForm();
+      // this.authService.sampleSubmitUserHandleForm();
+      this.authService.createNewUserHandle(this.userHandleInput.value);
     } else {
       alert('Please enter a valid Handle!');
     }
   }
 
   logOut() {
+    // this.authService.sampleLogOut();
     this.authService.logOut();
   }
 }

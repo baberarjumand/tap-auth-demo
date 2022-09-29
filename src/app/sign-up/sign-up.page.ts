@@ -41,7 +41,7 @@ export class SignUpPage implements OnInit, OnDestroy {
 
   signUp() {
     if (this.userHandleInput.valid) {
-      this.authService.signUp();
+      this.authService.sampleSignUp();
     } else {
       alert('Please enter a valid Handle!');
     }
