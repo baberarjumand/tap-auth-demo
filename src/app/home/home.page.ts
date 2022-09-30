@@ -15,6 +15,15 @@ export class HomePage implements OnInit {
   constructor(private authService: AuthService, private util: UtilService) {}
 
   async ngOnInit(): Promise<void> {
+    await this.fetchUserData();
+  }
+
+  logOut() {
+    // this.authService.sampleLogOut();
+    this.authService.logOut();
+  }
+
+  async fetchUserData() {
     try {
       this.isLoading = true;
       await this.util.showLoading();
@@ -28,12 +37,13 @@ export class HomePage implements OnInit {
     }
   }
 
-  logOut() {
-    // this.authService.sampleLogOut();
-    this.authService.logOut();
+  async connectMetamaskWallet() {
+    await this.authService.connectAnotherMetamaskWallet();
+    await this.fetchUserData();
   }
 
-  connectMetamaskWallet() {
-    this.authService.connectAnotherMetamaskWallet();
+  async connectWalletConnectWallet() {
+    await this.authService.connectAnotherWalletConnectWallet();
+    await this.fetchUserData();
   }
 }

@@ -8,7 +8,7 @@
     <p>This view is only accessible by authenticated users.</p>
     <br />
 
-    <p>User Handle:<br>{{ this.userHandle }}</p>
+    <p>User Handle:<br />{{ this.userHandle }}</p>
     <br />
 
     <hr />
@@ -23,15 +23,23 @@
 
     <p>Wallets Connected: {{ this.connectedWallets.length }}</p>
 
-    <ion-card *ngFor="let wallet of this.connectedWallets">
-      {{ wallet }}
-    </ion-card>
+    <ion-grid>
+      <ion-row *ngFor="let wallet of this.connectedWallets">
+        <ion-col size="10" offset="1" size-md="6" offset-md="3">
+          <ion-card class="wallet-card"> {{ wallet }} </ion-card>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
 
     <div class="btn-div">
-      <ion-button (click)="connectMetamaskWallet()">Connect Metamask Wallet</ion-button>
+      <ion-button (click)="connectMetamaskWallet()"
+        >Connect Metamask Wallet</ion-button
+      >
     </div>
     <div class="btn-div">
-      <ion-button>Connect WalletConnect Wallet</ion-button>
+      <ion-button (click)="connectWalletConnectWallet()"
+        >Connect WalletConnect Wallet</ion-button
+      >
     </div>
 
     <hr />

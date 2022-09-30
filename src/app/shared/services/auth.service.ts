@@ -104,8 +104,8 @@ export class AuthService {
       userHandleObj.set('handle', handle.toLowerCase());
 
       const connectedUsersArr = [];
-      // connectedUsersArr.push(currentUserObj.id);
-      connectedUsersArr.push(currentUserObj);
+      connectedUsersArr.push(currentUserObj.id);
+      // connectedUsersArr.push(currentUserObj);
       userHandleObj.set('connectedUsers', connectedUsersArr);
 
       userHandleObj.set('handleClaimed', true);
@@ -152,6 +152,33 @@ export class AuthService {
     }
   }
 
+  async loginWithWalletConnect() {
+    try {
+      await this.util.showLoading('Logging in with WalletConnect...');
+
+      const authResponse = await Moralis.authenticate({
+        provider: 'walletconnect',
+        signingMessage: 'Log in to Tap Auth Demo using WalletConnect',
+      });
+      // console.log('Sign In With Metamask successful!:', authResponse);
+      this.isAuthenticated$.next(true);
+
+      await this.postSuccessfulLogin();
+    } catch (err) {
+      this.isAuthenticated$.next(false);
+
+      if (err.message === 'Non ethereum enabled browser') {
+        alert('Please install the WalletConnect Extension');
+      } else if (err.code === 4001) {
+        alert('Please try logging in again with WalletConnect.');
+      } else {
+        console.error('Error logging in WalletConnect:', err);
+      }
+    } finally {
+      await this.util.hideLoading();
+    }
+  }
+
   async connectAnotherMetamaskWallet() {
     try {
       await this.util.showLoading('Connecting Another Metamask Wallet...');
@@ -165,6 +192,27 @@ export class AuthService {
       console.error('Error in connectAnotherMetamaskWallet:', error);
       alert(
         'There was an error connecting another Metamask Wallet. Please login again.'
+      );
+      this.logOut();
+    } finally {
+      await this.util.hideLoading();
+    }
+  }
+
+  async connectAnotherWalletConnectWallet() {
+    try {
+      await this.util.showLoading('Connecting Another WalletConnect Wallet...');
+
+      const authResponse = await Moralis.authenticate({
+        provider: 'walletconnect',
+        signingMessage: 'Log in to Tap Auth Demo using WalletConnect',
+      });
+
+      await this.postSuccessfulConnection();
+    } catch (error) {
+      console.error('Error in connectAnotherWalletConnectWallet:', error);
+      alert(
+        'There was an error connecting another WalletConnect Wallet. Please login again.'
       );
       this.logOut();
     } finally {
@@ -209,8 +257,13 @@ export class AuthService {
 
       // upon succesful auth, add new user obj to array of connectedUsers in userHandle object
       const connectedUsersArr = userHandleObj.get('connectedUsers');
-      connectedUsersArr.push(currentUserObj);
-      userHandleObj.set('connectedUsers', connectedUsersArr);
+      connectedUsersArr.push(currentUserObj.id);
+      // connectedUsersArr.push(currentUserObj);
+
+      // remove duplicate user ids if present from array
+      userHandleObj.set('connectedUsers', [...new Set(connectedUsersArr)]);
+      // userHandleObj.set('connectedUsers', connectedUsersArr);
+
       await userHandleObj.save();
     } catch (error) {
       console.error('Error in postSuccessfulConnection:', error);
