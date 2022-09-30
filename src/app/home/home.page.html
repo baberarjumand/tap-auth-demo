@@ -21,10 +21,14 @@
 
     <hr />
 
-    <p>Wallets Connected: 0</p>
+    <p>Wallets Connected: {{ this.connectedWallets.length }}</p>
+
+    <ion-card *ngFor="let wallet of this.connectedWallets">
+      {{ wallet }}
+    </ion-card>
 
     <div class="btn-div">
-      <ion-button>Connect Metamask Wallet</ion-button>
+      <ion-button (click)="connectMetamaskWallet()">Connect Metamask Wallet</ion-button>
     </div>
     <div class="btn-div">
       <ion-button>Connect WalletConnect Wallet</ion-button>

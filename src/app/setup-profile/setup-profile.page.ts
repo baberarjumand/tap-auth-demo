@@ -15,6 +15,7 @@ export class SetupProfilePage implements OnInit, OnDestroy {
   userHandleInput: FormControl = new FormControl(
     '',
     [Validators.required, Validators.minLength(5)],
+    // TODO add validation to detect spaces in input
     [this.userHandleValidator.validate.bind(this.userHandleValidator)]
   );
   userHandleInputSub: Subscription;

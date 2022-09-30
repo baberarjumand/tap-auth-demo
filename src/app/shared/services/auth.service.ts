@@ -14,6 +14,7 @@ export class AuthService {
   isAuthenticated$ = new BehaviorSubject(false);
   isProfileComplete$ = new BehaviorSubject(false);
   currentUserHandle = '';
+  connectedWallets = [];
 
   constructor(private router: Router, private util: UtilService) {
     this.initializeMoraslis();
@@ -71,37 +72,17 @@ export class AuthService {
   }
 
   isUserHandleUnique(handle: string) {
-    // console.log('Checking input: ' + handle);
-
-    // return new Promise((resolve, reject) =>
-    //   setTimeout(() => {
-    //     if (handle === 'sample01') {
-    //       resolve(false);
-    //     } else {
-    //       resolve(true);
-    //     }
-    //   }, 1500)
-    // );
-
-    // if (handle === 'sample01') {
-    //   return false;
-    // } else {
-    //   return true;
-    // }
-
-    return new Promise(async (resolve, reject) => {
+    return new Promise(async (res, reject) => {
       try {
         const USER_HANDLE = Moralis.Object.extend('UserHandle');
         const query = new Moralis.Query(USER_HANDLE);
         query.equalTo('handle', handle.toLowerCase());
         const object = await query.first();
 
-        // console.log('isUserHandleUnique Query Result:', object);
-
         if (object) {
-          resolve(false);
+          res(false);
         } else {
-          resolve(true);
+          res(true);
         }
       } catch (err) {
         console.error('Error in isUserHandleUnique:', err);
@@ -114,16 +95,18 @@ export class AuthService {
     try {
       await this.util.showLoading();
 
+      const currentUserObj = Moralis.User.current();
+
       // create new user handle obj and save to db
       const USER_HANDLE = Moralis.Object.extend('UserHandle');
       const userHandleObj = new USER_HANDLE();
 
       userHandleObj.set('handle', handle.toLowerCase());
 
-      const uidArr = [];
-      const currentUserObj = Moralis.User.current();
-      uidArr.push(currentUserObj.id);
-      userHandleObj.set('connectedUUIDs', uidArr);
+      const connectedUsersArr = [];
+      // connectedUsersArr.push(currentUserObj.id);
+      connectedUsersArr.push(currentUserObj);
+      userHandleObj.set('connectedUsers', connectedUsersArr);
 
       userHandleObj.set('handleClaimed', true);
 
@@ -144,11 +127,6 @@ export class AuthService {
   }
 
   async loginWithMetamask() {
-    // await this.util.showLoading();
-    // setTimeout(() => {
-    //   this.util.hideLoading();
-    // }, 1000);
-
     try {
       await this.util.showLoading('Logging in with Metamask...');
 
@@ -182,19 +160,7 @@ export class AuthService {
         signingMessage: 'Log in to Tap Auth Demo using Metamask',
       });
 
-      const currentUserObj = Moralis.User.current();
-
-      // upon succesful auth, store userHandle pointer in User object
-      const USER_HANDLE = Moralis.Object.extend('UserHandle');
-      const query = new Moralis.Query(USER_HANDLE);
-      query.equalTo('handle', this.currentUserHandle);
-      const userHandleObj = await query.first();
-      currentUserObj.set('handle', userHandleObj);
-      await currentUserObj.save();
-
-      // upon succesful auth, add new UUID to array of UUIDs in userHandle object
-      
-
+      await this.postSuccessfulConnection();
     } catch (error) {
       console.error('Error in connectAnotherMetamaskWallet:', error);
       alert(
@@ -207,19 +173,19 @@ export class AuthService {
   }
 
   postSuccessfulLogin() {
-    return new Promise((resolve, reject) => {
+    return new Promise((res, reject) => {
       try {
         const currentUser = Moralis.User.current();
 
         if (currentUser.has('handle')) {
           this.isProfileComplete$.next(true);
           this.router.navigate(['']);
-          resolve(null);
+          res(null);
           this.getCurrentUserHandle();
         } else {
           this.isProfileComplete$.next(false);
           this.router.navigate(['setup-profile']);
-          resolve(null);
+          res(null);
         }
       } catch (error) {
         console.error('Error in postSuccessfulLogin:', error);
@@ -229,11 +195,33 @@ export class AuthService {
     });
   }
 
+  async postSuccessfulConnection() {
+    try {
+      const currentUserObj = Moralis.User.current();
+
+      // upon succesful auth, store userHandle pointer in User object
+      const USER_HANDLE = Moralis.Object.extend('UserHandle');
+      const query = new Moralis.Query(USER_HANDLE);
+      query.equalTo('handle', this.currentUserHandle);
+      const userHandleObj = await query.first();
+      currentUserObj.set('handle', userHandleObj);
+      await currentUserObj.save();
+
+      // upon succesful auth, add new user obj to array of connectedUsers in userHandle object
+      const connectedUsersArr = userHandleObj.get('connectedUsers');
+      connectedUsersArr.push(currentUserObj);
+      userHandleObj.set('connectedUsers', connectedUsersArr);
+      await userHandleObj.save();
+    } catch (error) {
+      console.error('Error in postSuccessfulConnection:', error);
+      throw error;
+    }
+  }
+
   async logOut() {
     try {
       await this.util.showLoading('Logging Out...');
       await Moralis.User.logOut();
-      // localStorage.clear();
 
       this.isAuthenticated$.next(false);
       this.isProfileComplete$.next(false);
@@ -264,6 +252,27 @@ export class AuthService {
       return this.currentUserHandle;
     } catch (error) {
       console.error('Error in getCurrentUserHandle:', error);
+    }
+  }
+
+  async getConnectedWallets(): Promise<string[]> {
+    try {
+      if (this.currentUserHandle.length > 0) {
+        const currentUserHandleObj = Moralis.User.current().get('handle');
+
+        if (!currentUserHandleObj.isDataAvailable()) {
+          await currentUserHandleObj.fetch();
+        }
+
+        const walletsArr = await Moralis.Cloud.run('getUsersConnectedWallets', {
+          userHandle: currentUserHandleObj.get('handle'),
+        });
+
+        this.connectedWallets = walletsArr;
+        return this.connectedWallets;
+      }
+    } catch (error) {
+      console.error('Error in getConnectedWallets:', error);
     }
   }
 }

@@ -10,6 +10,7 @@ import { UtilService } from '../shared/services/util.service';
 export class HomePage implements OnInit {
   isLoading = true;
   userHandle = '';
+  connectedWallets = [];
 
   constructor(private authService: AuthService, private util: UtilService) {}
 
@@ -18,6 +19,7 @@ export class HomePage implements OnInit {
       this.isLoading = true;
       await this.util.showLoading();
       this.userHandle = await this.authService.getCurrentUserHandle();
+      this.connectedWallets = await this.authService.getConnectedWallets();
     } catch (error) {
       console.log('Error in home ngOnInit:', error);
     } finally {
@@ -29,5 +31,9 @@ export class HomePage implements OnInit {
   logOut() {
     // this.authService.sampleLogOut();
     this.authService.logOut();
+  }
+
+  connectMetamaskWallet() {
+    this.authService.connectAnotherMetamaskWallet();
   }
 }
