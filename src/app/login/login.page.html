@@ -5,7 +5,9 @@
     <p>Please click below to sign in.</p>
 
     <div class="btn-div">
-      <ion-button>Sign In with Magic Link</ion-button>
+      <ion-button (click)="loginWithMagicLink()"
+        >Sign In with Magic Link</ion-button
+      >
     </div>
 
     <div class="btn-div">
@@ -25,5 +27,38 @@
     <!-- <div class="btn-div">
       <ion-button [routerLink]="['/sign-up']">Sign Up Instead</ion-button>
     </div> -->
+
+    <ion-modal [isOpen]="isEmailModalOpen">
+      <ng-template>
+        <ion-header>
+          <ion-toolbar>
+            <ion-toolbar>
+              <ion-buttons slot="start">
+                <ion-button (click)="closeEmailModal()">Cancel</ion-button>
+              </ion-buttons>
+              <ion-title>Enter Email</ion-title>
+              <ion-buttons slot="end">
+                <ion-button (click)="confirmEmailModal()" [strong]="true"
+                  >Confirm</ion-button
+                >
+              </ion-buttons>
+            </ion-toolbar>
+          </ion-toolbar>
+        </ion-header>
+        <ion-content class="ion-padding">
+          <ion-item>
+            <ion-label position="stacked">Enter your email</ion-label>
+            <ion-input
+              type="email"
+              inputmode="email"
+              placeholder="abc@xyz.com"
+              [required]="true"
+              [pattern]="userEmailRegex"
+              [(ngModel)]="userEmail"
+            ></ion-input>
+          </ion-item>
+        </ion-content>
+      </ng-template>
+    </ion-modal>
   </div>
 </ion-content>

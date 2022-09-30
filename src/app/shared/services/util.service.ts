@@ -6,6 +6,10 @@ import { LoadingController } from '@ionic/angular';
 })
 export class UtilService {
   loadingRef: HTMLIonLoadingElement;
+  emailPattern = new RegExp(
+    // eslint-disable-next-line max-len
+    /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+(?:[A-Z]{2}|com|org|net|gov|mil|biz|info|mobi|name|aero|jobs|museum)\b/
+  );
 
   constructor(private loadingCtrl: LoadingController) {}
 
@@ -22,5 +26,9 @@ export class UtilService {
     if (this.loadingRef) {
       await this.loadingRef.dismiss();
     }
+  }
+
+  isEmailAddressValid(email: string): boolean {
+    return this.emailPattern.test(email);
   }
 }

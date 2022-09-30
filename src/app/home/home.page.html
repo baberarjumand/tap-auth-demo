@@ -13,10 +13,18 @@
 
     <hr />
 
-    <p>Email Connected: No</p>
+    <p>Email Connected: {{ this.connectedEmails.length }}</p>
+
+    <ion-grid>
+      <ion-row *ngFor="let email of this.connectedEmails">
+        <ion-col size="10" offset="1" size-md="6" offset-md="3">
+          <ion-card class="email-card"> {{ email }} </ion-card>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
 
     <div class="btn-div">
-      <ion-button>Connect Email</ion-button>
+      <ion-button (click)="connectMagicLinkEmail()">Connect Email</ion-button>
     </div>
 
     <hr />
@@ -47,5 +55,38 @@
     <div class="btn-div">
       <ion-button (click)="logOut()">Log Out</ion-button>
     </div>
+
+    <ion-modal [isOpen]="showEmailModal">
+      <ng-template>
+        <ion-header>
+          <ion-toolbar>
+            <ion-toolbar>
+              <ion-buttons slot="start">
+                <ion-button (click)="closeEmailModal()">Cancel</ion-button>
+              </ion-buttons>
+              <ion-title>Enter Email</ion-title>
+              <ion-buttons slot="end">
+                <ion-button (click)="confirmEmailModal()" [strong]="true"
+                  >Confirm</ion-button
+                >
+              </ion-buttons>
+            </ion-toolbar>
+          </ion-toolbar>
+        </ion-header>
+        <ion-content class="ion-padding">
+          <ion-item>
+            <ion-label position="stacked">Enter your email</ion-label>
+            <ion-input
+              type="email"
+              inputmode="email"
+              placeholder="abc@xyz.com"
+              [required]="true"
+              [pattern]="userEmailRegex"
+              [(ngModel)]="userEmail"
+            ></ion-input>
+          </ion-item>
+        </ion-content>
+      </ng-template>
+    </ion-modal>
   </div>
 </ion-content>

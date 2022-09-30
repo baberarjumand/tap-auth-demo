@@ -15,6 +15,7 @@ export class AuthService {
   isProfileComplete$ = new BehaviorSubject(false);
   currentUserHandle = '';
   connectedWallets = [];
+  connectedEmails = [];
 
   constructor(private router: Router, private util: UtilService) {
     this.initializeMoraslis();
@@ -105,8 +106,13 @@ export class AuthService {
 
       const connectedUsersArr = [];
       connectedUsersArr.push(currentUserObj.id);
-      // connectedUsersArr.push(currentUserObj);
-      userHandleObj.set('connectedUsers', connectedUsersArr);
+
+      if (currentUserObj.has('email')) {
+        userHandleObj.set('connectedEmailUsers', connectedUsersArr);
+      } else {
+        // connectedUsersArr.push(currentUserObj);
+        userHandleObj.set('connectedWalletUsers', connectedUsersArr);
+      }
 
       userHandleObj.set('handleClaimed', true);
 
@@ -143,7 +149,8 @@ export class AuthService {
       if (err.message === 'Non ethereum enabled browser') {
         alert('Please install the Metamask Extension');
       } else if (err.code === 4001) {
-        alert('Please try logging in again with Metamask.');
+        // alert('Please try logging in again with Metamask.');
+        console.log('User denied Metamask signature request');
       } else {
         console.error('Error logging in Metamask:', err);
       }
@@ -171,6 +178,42 @@ export class AuthService {
         alert('Please install the WalletConnect Extension');
       } else if (err.code === 4001) {
         alert('Please try logging in again with WalletConnect.');
+      } else if (err.message === 'User closed modal') {
+        // alert('WalletConnect modal dismissed by user.');
+        console.log('WalletConnect modal dismissed by user.');
+      } else {
+        console.error('Error logging in WalletConnect:', err);
+      }
+    } finally {
+      await this.util.hideLoading();
+    }
+  }
+
+  async loginWithMagicLink(email: string) {
+    try {
+      await this.util.showLoading('Logging in with Magic Link...');
+
+      const userObj = await Moralis.authenticate({
+        provider: 'magicLink',
+        email: email.toLowerCase(),
+        apiKey: environment.magicLinkApiKey,
+        network: 'mainnet',
+      });
+
+      userObj.set('email', email);
+      await userObj.save();
+
+      // console.log('Sign In With Metamask successful!:', authResponse);
+      this.isAuthenticated$.next(true);
+
+      await this.postSuccessfulLogin();
+    } catch (err) {
+      this.isAuthenticated$.next(false);
+
+      if (err.message === 'Non ethereum enabled browser') {
+        alert('Please install the WalletConnect Extension');
+      } else if (err.code === 4001) {
+        alert('Please try logging in again with WalletConnect.');
       } else {
         console.error('Error logging in WalletConnect:', err);
       }
@@ -187,13 +230,19 @@ export class AuthService {
         signingMessage: 'Log in to Tap Auth Demo using Metamask',
       });
 
-      await this.postSuccessfulConnection();
+      await this.postSuccessfulWalletConnection();
     } catch (error) {
-      console.error('Error in connectAnotherMetamaskWallet:', error);
-      alert(
-        'There was an error connecting another Metamask Wallet. Please login again.'
-      );
-      this.logOut();
+      if (error.code === 4001) {
+        alert('Metamask Signature Request Denied. Please log in again.');
+        console.log('User denied Metamask signature request');
+        this.logOut();
+      } else {
+        console.error('Error in connectAnotherMetamaskWallet:', error);
+        alert(
+          'There was an error connecting another Metamask Wallet. Please login again.'
+        );
+        this.logOut();
+      }
     } finally {
       await this.util.hideLoading();
     }
@@ -208,11 +257,49 @@ export class AuthService {
         signingMessage: 'Log in to Tap Auth Demo using WalletConnect',
       });
 
-      await this.postSuccessfulConnection();
+      await this.postSuccessfulWalletConnection();
     } catch (error) {
-      console.error('Error in connectAnotherWalletConnectWallet:', error);
+      if (error.message === 'User closed modal') {
+        console.log('WalletConnect modal dismissed by user.');
+        alert('WalletConnect modal dismissed by user. Please log in again.');
+        this.logOut();
+      } else {
+        console.error('Error in connectAnotherWalletConnectWallet:', error);
+        alert(
+          'There was an error connecting another WalletConnect Wallet. Please login again.'
+        );
+        this.logOut();
+      }
+    } finally {
+      await this.util.hideLoading();
+    }
+  }
+
+  async connectAnotherMagicLinkEmail(email: string) {
+    try {
+      await this.util.showLoading('Connecting Another Email via Magic Link...');
+
+      // await Moralis.enableWeb3();
+      await Moralis.User.logOut();
+
+      const userObj = await Moralis.authenticate({
+        provider: 'magicLink',
+        email: email.toLowerCase(),
+        apiKey: environment.magicLinkApiKey,
+        network: 'mainnet',
+      });
+
+      userObj.set('email', email);
+      await userObj.save();
+
+      // console.log('Sign In With Metamask successful!:', authResponse);
+      this.isAuthenticated$.next(true);
+
+      await this.postSuccessfulEmailConnection();
+    } catch (error) {
+      console.error('Error in connectAnotherMagicLinkEmail:', error);
       alert(
-        'There was an error connecting another WalletConnect Wallet. Please login again.'
+        'There was an error connecting another Email with Magic Link. Please login again.'
       );
       this.logOut();
     } finally {
@@ -243,7 +330,7 @@ export class AuthService {
     });
   }
 
-  async postSuccessfulConnection() {
+  async postSuccessfulWalletConnection() {
     try {
       const currentUserObj = Moralis.User.current();
 
@@ -256,13 +343,41 @@ export class AuthService {
       await currentUserObj.save();
 
       // upon succesful auth, add new user obj to array of connectedUsers in userHandle object
-      const connectedUsersArr = userHandleObj.get('connectedUsers');
+      const connectedUsersArr = userHandleObj.get('connectedWalletUsers');
       connectedUsersArr.push(currentUserObj.id);
       // connectedUsersArr.push(currentUserObj);
 
       // remove duplicate user ids if present from array
-      userHandleObj.set('connectedUsers', [...new Set(connectedUsersArr)]);
-      // userHandleObj.set('connectedUsers', connectedUsersArr);
+      userHandleObj.set('connectedWalletUsers', [
+        ...new Set(connectedUsersArr),
+      ]);
+
+      await userHandleObj.save();
+    } catch (error) {
+      console.error('Error in postSuccessfulConnection:', error);
+      throw error;
+    }
+  }
+
+  async postSuccessfulEmailConnection() {
+    try {
+      const currentUserObj = Moralis.User.current();
+
+      // upon succesful auth, store userHandle pointer in User object
+      const USER_HANDLE = Moralis.Object.extend('UserHandle');
+      const query = new Moralis.Query(USER_HANDLE);
+      query.equalTo('handle', this.currentUserHandle);
+      const userHandleObj = await query.first();
+      currentUserObj.set('handle', userHandleObj);
+      await currentUserObj.save();
+
+      // upon succesful auth, add new user obj to array of connectedUsers in userHandle object
+      const connectedUsersArr = userHandleObj.get('connectedEmailUsers');
+      connectedUsersArr.push(currentUserObj.id);
+      // connectedUsersArr.push(currentUserObj);
+
+      // remove duplicate user ids if present from array
+      userHandleObj.set('connectedEmailUsers', [...new Set(connectedUsersArr)]);
 
       await userHandleObj.save();
     } catch (error) {
@@ -279,6 +394,8 @@ export class AuthService {
       this.isAuthenticated$.next(false);
       this.isProfileComplete$.next(false);
       this.currentUserHandle = '';
+      this.connectedWallets = [];
+      this.connectedEmails = [];
 
       this.router.navigate(['login']);
     } catch (err) {
@@ -323,6 +440,27 @@ export class AuthService {
 
         this.connectedWallets = walletsArr;
         return this.connectedWallets;
+      }
+    } catch (error) {
+      console.error('Error in getConnectedWallets:', error);
+    }
+  }
+
+  async getConnectedEmails(): Promise<string[]> {
+    try {
+      if (this.currentUserHandle.length > 0) {
+        const currentUserHandleObj = Moralis.User.current().get('handle');
+
+        if (!currentUserHandleObj.isDataAvailable()) {
+          await currentUserHandleObj.fetch();
+        }
+
+        const emailsArr = await Moralis.Cloud.run('getUsersConnectedEmails', {
+          userHandle: currentUserHandleObj.get('handle'),
+        });
+
+        this.connectedEmails = emailsArr;
+        return this.connectedEmails;
       }
     } catch (error) {
       console.error('Error in getConnectedWallets:', error);

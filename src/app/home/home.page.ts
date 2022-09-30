@@ -11,8 +11,14 @@ export class HomePage implements OnInit {
   isLoading = true;
   userHandle = '';
   connectedWallets = [];
+  connectedEmails = [];
+  showEmailModal = false;
+  userEmailRegex;
+  userEmail: string;
 
-  constructor(private authService: AuthService, private util: UtilService) {}
+  constructor(private authService: AuthService, private util: UtilService) {
+    this.userEmailRegex = this.util.emailPattern;
+  }
 
   async ngOnInit(): Promise<void> {
     await this.fetchUserData();
@@ -29,6 +35,7 @@ export class HomePage implements OnInit {
       await this.util.showLoading();
       this.userHandle = await this.authService.getCurrentUserHandle();
       this.connectedWallets = await this.authService.getConnectedWallets();
+      this.connectedEmails = await this.authService.getConnectedEmails();
     } catch (error) {
       console.log('Error in home ngOnInit:', error);
     } finally {
@@ -45,5 +52,26 @@ export class HomePage implements OnInit {
   async connectWalletConnectWallet() {
     await this.authService.connectAnotherWalletConnectWallet();
     await this.fetchUserData();
+  }
+
+  connectMagicLinkEmail() {
+    this.showEmailModal = true;
+  }
+
+  closeEmailModal() {
+    this.showEmailModal = false;
+  }
+
+  async confirmEmailModal() {
+    if (this.util.isEmailAddressValid(this.userEmail.toLowerCase())) {
+      // console.log(this.userEmail);
+      this.showEmailModal = false;
+      await this.authService.connectAnotherMagicLinkEmail(
+        this.userEmail.toLowerCase()
+      );
+      await this.fetchUserData();
+    } else {
+      alert('Please enter a valid email!');
+    }
   }
 }
